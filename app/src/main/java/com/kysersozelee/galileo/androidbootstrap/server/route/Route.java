@@ -1,6 +1,6 @@
 package com.kysersozelee.galileo.androidbootstrap.server.route;
 
-import com.kysersozelee.galileo.androidbootstrap.server.IHandler;
+import com.kysersozelee.galileo.androidbootstrap.Component.IAction;
 
 import io.netty.handler.codec.http.HttpMethod;
 
@@ -14,12 +14,12 @@ import io.netty.handler.codec.http.HttpMethod;
 public class Route {
     private final HttpMethod method;
     private final String path;
-    private final IHandler handler;
+    private final IAction action;
 
-    public Route(final HttpMethod method, final String path, final IHandler handler) {
+    public Route(final HttpMethod method, final String path, final IAction action) {
         this.method = method;
         this.path = path;
-        this.handler = handler;
+        this.action = action;
     }
 
     public HttpMethod getMethod() {
@@ -30,8 +30,8 @@ public class Route {
         return path;
     }
 
-    public IHandler getHandler() {
-        return handler;
+    public IAction getAction() {
+        return action;
     }
 
     public boolean matches(final HttpMethod method, final String path) {

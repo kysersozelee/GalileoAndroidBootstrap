@@ -1,5 +1,6 @@
 package com.kysersozelee.galileo.androidbootstrap.server;
 
+import com.kysersozelee.galileo.androidbootstrap.Component.impl.ActionResult;
 import com.kysersozelee.galileo.androidbootstrap.server.route.Route;
 import com.kysersozelee.galileo.androidbootstrap.server.route.RouteTable;
 
@@ -80,9 +81,9 @@ public class HttpChannelHandler extends ChannelInboundHandlerAdapter {
 
         try {
             final HttpRequest requestWrapper = new HttpRequest(request);
-            final Object obj = route.getHandler().handle(requestWrapper, null);
-            final String content = obj == null ? "" : obj.toString();
-            writeResponse(ctx, request, HttpResponseStatus.OK, TYPE_PLAIN, content);
+            final ActionResult actionResult = route.getAction().doAction(requestWrapper, null);
+            final String content = (actionResult == null) ? "" : actionResult.getResultByJson().toString();
+            writeResponse(ctx, request, HttpResponseStatus.OK, TYPE_JSON, content);
         } catch (final Exception ex) {
             ex.printStackTrace();
             writeInternalServerError(ctx, request);
@@ -96,12 +97,10 @@ public class HttpChannelHandler extends ChannelInboundHandlerAdapter {
     }
 
 
-
-
     /**
      * Writes a 404 Not Found response.
      *
-     * @param ctx The channel context.
+     * @param ctx     The channel context.
      * @param request The HTTP request.
      */
     private static void writeNotFound(
@@ -115,7 +114,7 @@ public class HttpChannelHandler extends ChannelInboundHandlerAdapter {
     /**
      * Writes a 500 Internal Server Error response.
      *
-     * @param ctx The channel context.
+     * @param ctx     The channel context.
      * @param request The HTTP request.
      */
     private static void writeInternalServerError(
@@ -129,9 +128,9 @@ public class HttpChannelHandler extends ChannelInboundHandlerAdapter {
     /**
      * Writes a HTTP error response.
      *
-     * @param ctx The channel context.
+     * @param ctx     The channel context.
      * @param request The HTTP request.
-     * @param status The error status.
+     * @param status  The error status.
      */
     private static void writeErrorResponse(
             final ChannelHandlerContext ctx,
@@ -145,11 +144,11 @@ public class HttpChannelHandler extends ChannelInboundHandlerAdapter {
     /**
      * Writes a HTTP response.
      *
-     * @param ctx The channel context.
-     * @param request The HTTP request.
-     * @param status The HTTP status code.
+     * @param ctx         The channel context.
+     * @param request     The HTTP request.
+     * @param status      The HTTP status code.
      * @param contentType The response content type.
-     * @param content The response content.
+     * @param content     The response content.
      */
     private static void writeResponse(
             final ChannelHandlerContext ctx,
@@ -167,11 +166,11 @@ public class HttpChannelHandler extends ChannelInboundHandlerAdapter {
     /**
      * Writes a HTTP response.
      *
-     * @param ctx The channel context.
-     * @param request The HTTP request.
-     * @param status The HTTP status code.
-     * @param buf The response content buffer.
-     * @param contentType The response content type.
+     * @param ctx           The channel context.
+     * @param request       The HTTP request.
+     * @param status        The HTTP status code.
+     * @param buf           The response content buffer.
+     * @param contentType   The response content type.
      * @param contentLength The response content length;
      */
     private static void writeResponse(
@@ -194,7 +193,7 @@ public class HttpChannelHandler extends ChannelInboundHandlerAdapter {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss", Locale.KOREA);
         Date date = new Date((System.currentTimeMillis() / 1000L + 2208988800L));
-        String currentDateTime = sdf.format(new Date());
+        String currentDateTime = sdf.format(date);
 
         final DefaultHttpHeaders headers = (DefaultHttpHeaders) response.headers();
         headers.set(HttpHeaderNames.SERVER, HttpServer.SERVER_NAME);

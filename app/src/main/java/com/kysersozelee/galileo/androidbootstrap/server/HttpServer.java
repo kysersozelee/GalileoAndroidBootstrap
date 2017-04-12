@@ -1,5 +1,8 @@
 package com.kysersozelee.galileo.androidbootstrap.server;
 
+import com.kysersozelee.galileo.androidbootstrap.Component.AAction;
+import com.kysersozelee.galileo.androidbootstrap.Component.impl.GetOrientation;
+import com.kysersozelee.galileo.androidbootstrap.Component.IAction;
 import com.kysersozelee.galileo.androidbootstrap.server.route.Route;
 import com.kysersozelee.galileo.androidbootstrap.server.route.RouteTable;
 
@@ -40,6 +43,23 @@ public class HttpServer {
         this.port = port;
     }
 
+    public int getPort() {
+        return port;
+    }
+
+    public AtomicBoolean getIsRunning() {
+        return isRunning;
+    }
+
+    public void setIsRunning(AtomicBoolean isRunning) {
+        this.isRunning = isRunning;
+    }
+
+    public RouteTable getRouteTable() {
+        return routeTable;
+    }
+
+
     public void startServer(boolean wait) {
         if (serverThread != null) {
             throw new IllegalStateException("Server is already running");
@@ -56,7 +76,6 @@ public class HttpServer {
                             .channel(NioServerSocketChannel.class)
                             .option(ChannelOption.SO_KEEPALIVE, KEEP_ALIVE)
                             .option(ChannelOption.SO_LINGER, LINGER)
-                            .option(ChannelOption.TCP_NODELAY, TCP_NO_DELAY)
                             .childHandler(new ChannelInitializer<SocketChannel>() {
                                 @Override
                                 protected void initChannel(SocketChannel ch) throws Exception {
@@ -76,8 +95,12 @@ public class HttpServer {
                 }
             }
         };
+
+        registerRouterAndAction();
+
+
         serverThread.start();
-        if(wait){
+        if (wait) {
             try {
                 serverThread.join();
             } catch (InterruptedException e) {
@@ -93,31 +116,32 @@ public class HttpServer {
         serverThread.interrupt();
     }
 
-    public int getPort() {
-        return port;
+    private void registerRouterAndAction() {
+        registerAction(new GetOrientation("/galileo/getOrientation", HttpMethod.GET))
+                .registerAction(new GetOrientation("/galileo/getOrientation2", HttpMethod.GET));
+
+
+        /*get("/test", ((request, response) -> "TEST OK"))
+                .get("/test2", ((request, response) -> "TEST2 OK"))
+                .post("/test3", ((request, response) -> "TEST3 OK body : " + request.body()));
+
+        */
     }
 
-    public AtomicBoolean getIsRunning() {
-        return isRunning;
-    }
 
-    public void setIsRunning(AtomicBoolean isRunning) {
-        this.isRunning = isRunning;
+    private HttpServer registerAction(AAction AAction) {
+        this.routeTable.addRoute(new Route(AAction.getMethod(), AAction.getMappedUrl(), AAction));
+        return this;
     }
-
-    public RouteTable getRouteTable() {
-        return routeTable;
-    }
-
 
     /**
      * Adds a GET route.
      *
-     * @param path The URL path.
+     * @param path    The URL path.
      * @param handler The request handler.
      * @return This WebServer.
      */
-    public HttpServer get(final String path, final IHandler handler) {
+    private HttpServer get(final String path, final IAction handler) {
         this.routeTable.addRoute(new Route(HttpMethod.GET, path, handler));
         return this;
     }
@@ -126,11 +150,11 @@ public class HttpServer {
     /**
      * Adds a POST route.
      *
-     * @param path The URL path.
+     * @param path    The URL path.
      * @param handler The request handler.
      * @return This WebServer.
      */
-    public HttpServer post(final String path, final IHandler handler) {
+    private HttpServer post(final String path, final IAction handler) {
         this.routeTable.addRoute(new Route(HttpMethod.POST, path, handler));
         return this;
     }
